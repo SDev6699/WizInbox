@@ -146,23 +146,27 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ step, nextStep, pre
             Previous
           </button>
         )}
-        {step < 5 && (
-          <button
-            onClick={handleNextStep}
-            className="bg-blue-500 text-white py-3 px-6 rounded hover:bg-blue-600"
-          >
-            Next Step
-          </button>
-        )}
-        {step === 5 && (
-          <button
-            onClick={handleSubmit}
-            className={`bg-green-500 text-white py-3 px-6 rounded hover:bg-green-600 ${!agreed ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={!agreed}
-          >
-            Submit
-          </button>
-        )}
+
+        <div className="ml-auto">
+          {step < 5 && (
+            <button
+              onClick={handleNextStep}
+              className="bg-blue-500 text-white py-3 px-6 rounded hover:bg-blue-600 ml-4"
+            >
+              Next Step
+            </button>
+          )}
+
+          {step === 5 && (
+            <button
+              onClick={handleSubmit}
+              className={`bg-green-500 text-white py-3 px-6 rounded hover:bg-green-600 ml-4 ${!agreed ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!agreed}
+            >
+              Submit
+            </button>
+          )}
+        </div>
       </div>
       <ToastContainer />
     </>

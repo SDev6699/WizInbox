@@ -29,7 +29,10 @@ const EmailSetup = forwardRef((props: EmailSetupProps, ref) => {
       return validate();
     },
     checkUsername: async () => {
-      return await validateUsername(); // Expose the username check to the parent component
+      if (validate()) { // Check for errors first
+        return await validateUsername(); // Then call the API if no errors
+      }
+      return false; // Return false if there are validation errors
     }
   }));
 
@@ -115,16 +118,18 @@ const EmailSetup = forwardRef((props: EmailSetupProps, ref) => {
           {usernameSuggestions.length > 0 && (
             <div className="mt-4">
               <p className="text-sm text-gray-600">Suggestions:</p>
-              {usernameSuggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  className="bg-gray-200 text-gray-700 py-2 px-4 rounded mr-2 mb-2"
-                  onClick={() => handleChange('username', suggestion)}
-                >
-                  {suggestion}
-                </button>
-              ))}
-              <p className="text-sm text-gray-500">Or type a new username.</p>
+              <div className="flex flex-wrap">
+                {usernameSuggestions.map((suggestion, index) => (
+                  <span
+                    key={index}
+                    className="text-blue-600 cursor-pointer hover:underline mr-2"
+                    onClick={() => handleChange('username', suggestion.split('@')[0])}
+                  >
+                    {suggestion.split('@')[0]}
+                    {index < usernameSuggestions.length - 1 && ','}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
