@@ -1,4 +1,5 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { checkEmailAvailability } from '../../services/registrationService'; // Import the API call
 
 interface EmailSetupProps {
   handleChange: (input: string, value: string) => void;
@@ -7,6 +8,7 @@ interface EmailSetupProps {
     email: string;
     password: string;
     confirmPassword: string;
+    dateOfBirth: string; // Add dateOfBirth for username check
   };
 }
 
@@ -16,13 +18,18 @@ const EmailSetup = forwardRef((props: EmailSetupProps, ref) => {
     email: '',
     password: '',
     confirmPassword: '',
+    username: ''
   });
 
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
   const emailSuffix = "@wizinbox.com";
 
   useImperativeHandle(ref, () => ({
     validate: () => {
       return validate();
+    },
+    checkUsername: async () => {
+      return await validateUsername(); // Expose the username check to the parent component
     }
   }));
 
@@ -35,14 +42,9 @@ const EmailSetup = forwardRef((props: EmailSetupProps, ref) => {
     let valid = true;
     let tempErrors = { ...errors };
 
-    if (!values.email) {
-      tempErrors.email = 'Email Address is required';
+    if (!values.username) {
+      tempErrors.username = 'Username is required';
       valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(values.email)) {
-      tempErrors.email = 'Email Address is invalid';
-      valid = false;
-    } else {
-      tempErrors.email = '';
     }
 
     if (!values.password) {
@@ -51,8 +53,6 @@ const EmailSetup = forwardRef((props: EmailSetupProps, ref) => {
     } else if (values.password.length < 6) {
       tempErrors.password = 'Password must be at least 6 characters long';
       valid = false;
-    } else {
-      tempErrors.password = '';
     }
 
     if (!values.confirmPassword) {
@@ -61,12 +61,25 @@ const EmailSetup = forwardRef((props: EmailSetupProps, ref) => {
     } else if (values.confirmPassword !== values.password) {
       tempErrors.confirmPassword = 'Passwords do not match';
       valid = false;
-    } else {
-      tempErrors.confirmPassword = '';
     }
 
     setErrors(tempErrors);
     return valid;
+  };
+
+  const validateUsername = async () => {
+    try {
+      const response = await checkEmailAvailability(values.email, values.dateOfBirth);
+      if (!response.available) {
+        setUsernameSuggestions(response.suggestions);
+        setErrors({ ...errors, username: 'Username is taken. Please choose a suggestion or enter a new one.' });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      setErrors({ ...errors, username: 'Error checking username availability. Please try again.' });
+      return false;
+    }
   };
 
   // Handle input changes and clear errors for the corresponding field
@@ -79,24 +92,41 @@ const EmailSetup = forwardRef((props: EmailSetupProps, ref) => {
     <div>
       <h2 className="text-3xl font-semibold mb-8">Email ID Creation and Password Setup</h2>
       <div className="grid grid-cols-1 gap-6">
-        {/* Email Address */}
+        {/* Username with Email Suffix */}
         <div className="flex flex-col">
-          <label className="font-medium">Email Address *</label>
+          <label className="font-medium">Username *</label>
           <div className="relative">
             <input
               type="text"
-              name="email"
-              value={values.username} // Bind to the username
+              name="username"
+              value={values.username}
               onChange={(e) => handleInputChange('username', e.target.value)}
-              className={`border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded p-3 pr-24 w-full`} // Make input full width
+              className={`border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded p-3 pr-24 w-full`} // Adjust input padding to accommodate suffix
             />
             <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500">
               {emailSuffix}
             </span>
           </div>
           <div className="h-5">
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
           </div>
+
+          {/* Display suggestions if username is taken */}
+          {usernameSuggestions.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">Suggestions:</p>
+              {usernameSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  className="bg-gray-200 text-gray-700 py-2 px-4 rounded mr-2 mb-2"
+                  onClick={() => handleChange('username', suggestion)}
+                >
+                  {suggestion}
+                </button>
+              ))}
+              <p className="text-sm text-gray-500">Or type a new username.</p>
+            </div>
+          )}
         </div>
 
         {/* Password */}

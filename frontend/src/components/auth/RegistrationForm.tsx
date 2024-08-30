@@ -4,6 +4,10 @@ import EmailSetup from './EmailSetup';
 import SecurityInformation from './SecurityInformation';
 import Preferences from './Preferences';
 import ReviewAndSubmit from './ReviewAndSubmit';
+import { registerUser } from '../../services/registrationService';
+import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface RegistrationFormProps {
   step: number;
@@ -12,6 +16,7 @@ interface RegistrationFormProps {
 }
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ step, nextStep, prevStep }) => {
+  const navigate = useNavigate();
   const personalInfoRef = useRef<any>(null);
   const emailSetupRef = useRef<any>(null);
   const securityInfoRef = useRef<any>(null);
@@ -34,7 +39,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ step, nextStep, pre
     timeZone: '',
   });
 
-  const [agreed, setAgreed] = useState(false); // This state controls the checkbox in ReviewAndSubmit
+  const [agreed, setAgreed] = useState(false);
 
   const handleChange = (input: string, value: string) => {
     setFormData({ ...formData, [input]: value });
@@ -44,12 +49,13 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ step, nextStep, pre
     setAgreed(e.target.checked);
   };
 
-  const validateCurrentStep = () => {
+  const validateCurrentStep = async () => {
     switch (step) {
       case 1:
         return personalInfoRef.current?.validate();
       case 2:
-        return emailSetupRef.current?.validate();
+        const isUsernameValid = await emailSetupRef.current?.checkUsername();
+        return isUsernameValid && emailSetupRef.current?.validate();
       case 3:
         return securityInfoRef.current?.validate();
       case 4:
@@ -59,13 +65,30 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ step, nextStep, pre
     }
   };
 
-  const handleNextStep = () => {
-    const isValid = validateCurrentStep();
-    nextStep(isValid); // Pass the validation result to the parent
+  const handleNextStep = async () => {
+    const isValid = await validateCurrentStep();
+    nextStep(isValid);
   };
 
-  const handleSubmit = () => {
-    console.log("Form submitted", formData);
+  const handleSubmit = async () => {
+    try {
+      const response = await registerUser(formData);
+      toast.success('Registration successful! Redirecting to login page...', {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+    } catch (error) {
+      toast.error('Error during registration. Please try again.');
+    }
   };
 
   return (
@@ -134,6 +157,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ step, nextStep, pre
           </button>
         )}
       </div>
+      <ToastContainer />
     </>
   );
 };
