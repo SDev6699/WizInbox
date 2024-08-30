@@ -73,23 +73,30 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ step, nextStep, pre
   const handleSubmit = async () => {
     try {
       const response = await registerUser(formData);
-      toast.success('Registration successful! Redirecting to login page...', {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-      
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+  
+      // Assuming a successful registration response contains a status or message
+      if (response && response.success) {  // Adjust based on your API response structure
+        toast.success('Registration successful! Redirecting to login page...', {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+  
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      } else {
+        toast.error('Registration failed. Please try again.');
+      }
     } catch (error) {
       toast.error('Error during registration. Please try again.');
     }
   };
+  
 
   return (
     <>

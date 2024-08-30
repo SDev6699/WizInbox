@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import RegistrationForm from '../components/auth/RegistrationForm';
-import RegistrationLayout from '../components/layout/RegistrationLayout';
+import AuthLayout from '../components/layout/AuthLayout';
+import ProgressIndicator from '../components/layout/ProgressIndicator';
 
 const Register: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -8,20 +9,21 @@ const Register: React.FC = () => {
 
   const nextStep = (isValid: boolean) => {
     if (isValid) {
-      setStep((prevStep) => prevStep + 1); // Move to the next step
+      setStep((prevStep) => prevStep + 1);
     }
   };
 
   const prevStep = () => {
     if (step > 1) {
-      setStep((prevStep) => prevStep - 1); // Move to the previous step
+      setStep((prevStep) => prevStep - 1);
     }
   };
 
   return (
-    <RegistrationLayout currentStep={step} totalSteps={totalSteps}>
+    <AuthLayout title="Create Account">
+      <ProgressIndicator currentStep={step} totalSteps={totalSteps} />
       <RegistrationForm step={step} nextStep={nextStep} prevStep={prevStep} />
-    </RegistrationLayout>
+    </AuthLayout>
   );
 };
 
